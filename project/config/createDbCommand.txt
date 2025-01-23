@@ -1,0 +1,46 @@
+
+CREATE DATABASE expense_manager;
+
+USE expense_manager;
+
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    telegram_id BIGINT UNIQUE NOT NULL
+);
+
+CREATE TABLE expenses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    money_chi DECIMAL(10, 2) NOT NULL,
+    money_thu DECIMAL(10, 2) NOT NULL,
+    expense_type VARCHAR(20) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    description VARCHAR(255),
+    date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+//
+CREATE DATABASE expense_manager;
+
+USE expense_manager;
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    telegram_id INT UNIQUE NOT NULL
+);
+CREATE TABLE expenses (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  telegram_id INT,
+  money_chi DECIMAL(10, 2),
+  money_thu DECIMAL(10, 2),
+  expense_type VARCHAR(255),
+  category VARCHAR(255),
+  description TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (telegram_id) REFERENCES users(telegram_id) ON DELETE CASCADE
+);

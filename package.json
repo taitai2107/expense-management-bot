@@ -1,0 +1,22 @@
+{
+  "name": "testtele",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "mysql2": "^3.12.0",
+    "node-notifier": "^10.0.1",
+    "screenshot-desktop": "^1.15.0",
+    "telegraf": "^4.16.3"
+  }
+}
