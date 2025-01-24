@@ -21,8 +21,7 @@ CREATE TABLE expenses (
     date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
-
+//format code webstorm: ctrl alt l
 //
 CREATE DATABASE expense_manager;
 

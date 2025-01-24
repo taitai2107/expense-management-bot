@@ -1,5 +1,6 @@
 const { pool } = require("../config/connect");
 const ExcelJS = require('exceljs');
+const { getUserId } = require('../utils/Utils');
 
 class ReportManager {
   // static categories = {
@@ -60,7 +61,7 @@ class ReportManager {
       
       category = category.replace(/_rp$/, ''); 
      
-      const user_id = (await this.getUserId(telegram_id)).userId;
+      const user_id = (await getUserId(telegram_id)).userId;
       const query = `SELECT * FROM expenses WHERE user_id = ? AND category = ?`;
       const [rows] = await pool.execute(query,[user_id,category])
       // console.log("checkCate",category,user_id)
@@ -95,7 +96,7 @@ class ReportManager {
         return await ctx.reply("Không tìm thấy Telegram ID. Vui lòng thử lại.");
       }
 
-      const user_id = (await this.getUserId(telegram_id)).userId;
+      const user_id = (await getUserId(telegram_id)).userId;
       const query = 'SELECT * FROM expenses where user_id = ?'
       const [rows] = await pool.execute(query, [user_id]);
      // console.log(rows, user_id)
@@ -123,7 +124,7 @@ class ReportManager {
     try {
       const telegram_id = ctx.from.id;
 
-      const user = await this.getUserId(telegram_id);
+      const user = await getUserId(telegram_id);
       const user_id = user.userId;
       const query = `DELETE FROM expenses WHERE user_id = ? AND id = ?`;
 
@@ -145,7 +146,7 @@ class ReportManager {
     try {
       const telegramId = ctx.from.id;
       const year = new Date().getFullYear();
-      const user_id = (await this.getUserId(telegramId)).userId
+      const user_id = (await getUserId(telegramId)).userId
       console.log('userid', user_id)
       const querySum = `
         SELECT 
@@ -201,7 +202,7 @@ class ReportManager {
     }
 
     try {
-      const userResult = await this.getUserId(telegram_id);
+      const userResult = await getUserId(telegram_id);
 
       if (!userResult.success) {
         return await ctx.reply(userResult.message);
@@ -237,21 +238,7 @@ class ReportManager {
     }
   }
 
-  async getUserId(telegram_id) {
-    try {
-      const checkUserQuery = `SELECT id FROM users WHERE telegram_id = ?`;
-      const [userRows] = await pool.execute(checkUserQuery, [telegram_id]);
 
-      if (userRows.length === 0) {
-        return { success: false, message: "Tài khoản không tồn tại." };
-      }
-
-      return { success: true, userId: userRows[0].id };
-    } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu:", error);
-      return { success: false, message: "Đã xảy ra lỗi khi lấy dữ liệu." };
-    }
-  }
 }
 
 module.exports = ReportManager;
