@@ -20,7 +20,8 @@ class ExpenseManager {
           [{ text: "Ăn uống", callback_data: "category_an_uong" }],
           [{ text: "Giải trí", callback_data: "category_giai_tri" }],
           [{ text: "Đi lại", callback_data: "category_di_lai" }],
-          [{ text: "Khác", callback_data: "category_khac" }]
+          [{ text: "Khác", callback_data: "category_khac" }],
+          [{ text: "Import dữ liệu từ exel", callback_data: "import_exel" }]
         ]
       }
     });
@@ -89,7 +90,7 @@ class ExpenseManager {
         moneyChi,
         moneyThu,
         type,
-        category,
+        ExpenseManager.categories[category] ,
         description
       ]);
   

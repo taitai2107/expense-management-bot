@@ -34,6 +34,7 @@ class AllCommand extends BaseCommand {
 
       // Expense actions
       thu_chi: this.createMiddleware(this.handleTransactionMenu.bind(this), { clearState: true }),
+      import_exel:this.createMiddleware(this.handleImportExelReport.bind(this)),
       
       // Report actions
       report: this.createMiddleware(this.handleReportMenu.bind(this)),
@@ -44,7 +45,7 @@ class AllCommand extends BaseCommand {
       report_by_category:this.createMiddleware(this.handleRpByCategoryMenu.bind(this), { clearState: true }),
       //category_di_lai_rp: this.createMiddleware(this.handleCategoryReportSelection.bind(this)),
       
-
+      help:this.createMiddleware(this.handleHelp.bind(this)),
       default: this.handleInvalidChoice.bind(this),
     };
     //category_luong: this.createMiddleware(this.handleCategorySelection.bind(this)),
@@ -91,6 +92,25 @@ class AllCommand extends BaseCommand {
     await ctx.answerCbQuery();
   }
 
+  handleHelp(ctx) {
+    const message =
+        "🌟 *Bot Telegram - Quản Lý Chi Tiêu* 🌟\n\n" +
+        "Chào mừng bạn đến với bot giúp bạn quản lý chi tiêu hiệu quả.\n\n" +
+        "💡 *Hướng dẫn sử dụng:*\n" +
+        "- Gõ lệnh `/account` để đăng ký tài khoản.\n" +
+        "- *Lưu ý:* Khi bạn bấm xóa tài khoản và xác nhận, *tất cả dữ liệu thu/chi* của bạn sẽ bị xóa vĩnh viễn.\n\n" +
+        "⚙️ *Tính năng chính:*\n" +
+        "Hiện tại, bot hỗ trợ các chức năng quản lý chi tiêu cơ bản và đang trong quá trình phát triển thêm nhiều tính năng hữu ích.\n\n" +
+        "📩 *Liên hệ góp ý:*\n" +
+        "Mọi ý kiến đóng góp xin vui lòng gửi về email: *tainguyencongkhanh@gmail.com*.\n\n" +
+        " Xin chân thành cảm ơn!";
+    ctx.reply(message)
+  }
+  handleImportExelReport(ctx) {
+    const userId = ctx.from.id;
+    this.waitingForInput[userId] = 'waiting_for_excel';
+    ctx.reply('Hãy gửi file Excel (.xlsx) để import dữ liệu.');
+  }
   async handleRegister(ctx) {
     const full_name = `${ctx.from.first_name || "null"} ${ctx.from.last_name || "null"}`;
     const user_id = ctx.from.id;
@@ -184,6 +204,18 @@ class AllCommand extends BaseCommand {
         await ctx.reply("Lỗi cú pháp.Chọn một hành động từ menu trước khi nhập thông tin.");
       }
     });
+    this.bot.on("document", async (ctx) => {
+      const fileId = ctx.message.document.file_id;
+      const fileName = ctx.message.document.file_name;
+      if (this.waitingForInput[ctx.from.id] !== 'waiting_for_excel') {
+        return ctx.reply('Bạn cần click nút import trước khi gửi file Excel.');
+      }
+      if (!fileName.endsWith('.xlsx')) {
+        return ctx.reply('Vui lòng gửi file Excel (.xlsx).');
+      }
+
+
+    })
   }
 }
 

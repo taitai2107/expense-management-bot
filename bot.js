@@ -41,6 +41,7 @@ class Bot {
             inline_keyboard: [
               [{ text: "thu/chi", callback_data: "thu_chi" }],
               [{ text: "báo cáo", callback_data: "report" }],
+              [{ text: "help", callback_data: "help" }],
             ],
           },
         });
