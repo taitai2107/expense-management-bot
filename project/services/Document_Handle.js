@@ -20,7 +20,7 @@ class Document_Handle {
             const fileUrl = await ctx.telegram.getFileLink(fileId);
             const response = await axios.get(fileUrl.href, {responseType: "arraybuffer"});
 
-            ctx.reply("File đã được tải thành công! Đang xử lý dữ liệu...");
+            await  ctx.reply("File đã được tải lên thành công! Đang xử lý dữ liệu...");
             const workbook = new ExcelJS.Workbook();
             await workbook.xlsx.load(response.data);
 
@@ -35,28 +35,25 @@ class Document_Handle {
             worksheet.eachRow((row, rowIndex) => {
                 if (rowIndex === 1) return;
 
-                const [id, userId, moneyChi, moneyThu, expenseType, category, description, date] = row.values.slice(1);
-
+                const [id, userId, moneyChi, moneyThu, expenseType, category, description] = row.values.slice(1);
 
                 if (!id || !userId || !expenseType || !category) {
                     errors.push(`Dòng ${rowIndex}: Dữ liệu thiếu.`);
                     return;
                 }
 
+
                 if (!["Lương", "Ăn uống", "Giải trí", "Đi lại", "Khác"].includes(category)) {
                     errors.push(`Dòng ${rowIndex}: Giá trị 'category' không hợp lệ.`);
                     return;
                 }
 
-                // if ((moneyChi && moneyThu) || (!moneyChi && !moneyThu)) {
-                //     errors.push(`Dòng ${rowIndex}: money_chi và money_thu phải có một giá trị hợp lệ.`);
-                //     return;
-                // }
-                // if (!isValidDate(date)) {
-                //     errors.push(`Dòng ${rowIndex}: Ngày tháng không hợp lệ. Định dạng phải là 'YYYY-MM-DD'.`);
-                //     return;
-                // }
-                this.expenseManager.handleImportExel(ctx,moneyChi, moneyThu, category, description, date)
+                if ((Number(moneyChi) && Number(moneyThu)) || (!Number(moneyChi) && !Number(moneyThu))) {
+                    errors.push(`Dòng ${rowIndex}: money_chi và money_thu phải có một giá trị hợp lệ.`);
+                    return;
+                }
+
+                this.expenseManager.handleImportExel(ctx,moneyChi, moneyThu, category, description)
               //  console.log({id, userId, moneyChi, moneyThu, expenseType, category, description, date});
             });
 

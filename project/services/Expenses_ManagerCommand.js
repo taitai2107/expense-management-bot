@@ -28,14 +28,14 @@ class ExpenseManager {
         });
     }
 
-    async handleImportExel(ctx,money_chi,money_thu,category,description,date ){
+    async handleImportExel(ctx,money_chi,money_thu,category,description ){
         if (!ctx.from.id) {
             return await ctx.reply("Không tìm thấy Telegram ID. Vui lòng thử lại.");}
             try {
                 let userid = (await getUserId(ctx.from.id)).userId
                 const query = `  INSERT INTO expenses (user_id, money_chi, money_thu, expense_type, category,
-                                                       description, date)
-                                 VALUES (?, ?, ?, ?, ?, ?, ?)`
+                                                       description)
+                                 VALUES (?, ?, ?, ?, ?, ?)`
 
                 const expenseType = money_chi > 0 ? "Chi" : (money_thu >= 0 ? "Thu" : null);
                 await pool.execute(query, [
@@ -45,7 +45,6 @@ class ExpenseManager {
                     expenseType,
                     category,
                     description,
-                    date
                 ]);
               //  ctx.reply("giao dịch đã được import thành công")
             } catch (err) {
@@ -80,6 +79,7 @@ async saveTransaction(ctx, telegramId, money, type, category, description)
 {
     try {
         console.log("Thông tin người dùng:", telegramId);
+
 
         const checkUserQuery = `SELECT id FROM users WHERE telegram_id = ?`;
         const [userRows] = await pool.execute(checkUserQuery, [telegramId]);
