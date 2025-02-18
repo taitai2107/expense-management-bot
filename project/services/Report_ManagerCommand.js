@@ -3,13 +3,7 @@ const ExcelJS = require('exceljs');
 const { getUserId } = require('../utils/Utils');
 
 class ReportManager {
-  // static categories = {
-  //   category_luong_pr: "Lương",
-  //   category_an_uong_rp: "Ăn uống",
-  //   category_giai_tri_rp: "Giải trí",
-  //   category_di_lai_rp: "Đi lại",
-  //   category_khac_rp: "Khác"
-  // };
+
    categories = ["category_luong","category_giai_tri","category_an_uong","category_di_lai","category_khac"]
   async processReportByCategory(ctx) {
     // ctx.session = ctx.session || {};
@@ -64,8 +58,6 @@ class ReportManager {
       const user_id = (await getUserId(telegram_id)).userId;
       const query = `SELECT * FROM expenses WHERE user_id = ? AND category = ?`;
       const [rows] = await pool.execute(query,[user_id,category])
-      // console.log("checkCate",category,user_id)
-      // console.log('check_row',rows)
       if (!Array.isArray(rows) || rows.length === 0) {
         return await ctx.reply("Không có giao dịch nào được tìm thấy.");
       }
@@ -186,9 +178,15 @@ class ReportManager {
           message += `  - Ngày: ${new Date(entry.date).toLocaleDateString()}\n\n`;
         });
       }
+      const fileName = `transactions_${telegramId}_month: ${month}.txt`;
+      const fileBuffer = Buffer.from(message, 'utf8');
 
+      await ctx.replyWithDocument({
+        source: fileBuffer,
+        filename: fileName,
+      });
 
-      await ctx.reply(message);
+     // await ctx.reply(message);
     } catch (error) {
       console.error("Lỗi khi tạo báo cáo tháng:", error);
       await ctx.reply("Đã xảy ra lỗi khi tạo báo cáo. Vui lòng thử lại sau.");
@@ -203,13 +201,11 @@ class ReportManager {
 
     try {
       const userResult = await getUserId(telegram_id);
-
       if (!userResult.success) {
         return await ctx.reply(userResult.message);
       }
 
       const userId = userResult.userId;
-     // console.log('check userid', userId)
       const query = `SELECT * FROM expenses WHERE user_id = ?`;
       const [rows] = await pool.execute(query, [userId]);
 
@@ -217,11 +213,8 @@ class ReportManager {
         return await ctx.reply("Không có giao dịch nào được tìm thấy.");
       }
 
-      let message = "Danh sách giao dịch của bạn:\n";
-
+      let message = "Danh sách giao dịch của bạn:\n\n";
       rows.forEach((row, index) => {
-        // let money = row.money_thu ? row.money_chi : 0
-        //message += `STT: ${index + 1}: \n IdTrans: ${row.id}, \n Loại: ${row.expense_type}, \n Danh mục: ${row.category}, \n Mô tả: ${row.description}, \n Số tiền chi: ${row.money_chi} VND\n Số tiền thu: ${row.money_thu} VND\n Date: ${row.date} \n`;
         message += `STT: ${index + 1}. Mô tả: ${row.description}\n`;
         message += `  - Id Giao Dịch: ${row.id}\n`;
         message += `  - Loại: ${row.category}\n`;
@@ -231,12 +224,21 @@ class ReportManager {
         message += `  - Ngày: ${new Date(row.date).toLocaleDateString()}\n\n`;
       });
 
-      return await ctx.reply(message);
+
+      const fileName = `transactions_${telegram_id}_${Date.now()}.txt`;
+      const fileBuffer = Buffer.from(message, 'utf8');
+
+      await ctx.replyWithDocument({
+        source: fileBuffer,
+        filename: fileName,
+      });
+
     } catch (error) {
       console.error("Lỗi khi lấy danh sách giao dịch:", error);
       return ctx.reply("Đã xảy ra lỗi khi lấy danh sách giao dịch. Vui lòng thử lại.");
     }
   }
+
 
 
 }

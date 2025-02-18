@@ -1,13 +1,32 @@
 class TextHandler {
-  constructor(expenseManager,waitingForInput , reportManager) {
+  constructor(expenseManager,waitingForInput , reportManager,stateBudget) {
     this.expenseManager = expenseManager;
     this.waitingForInput = waitingForInput
     this.reportManager = reportManager;
+    this.stateBudget = stateBudget;
+
+  }
+ columnMappingBudget = {
+   budget_an_uong:"Ăn uống",
+   budget_giai_tri:"Giải trí",
+   budget_di_lai:"Đi Lại",
+   budget_khac:"Khác",
+   budget_total:"Tổng"
   }
 
+  async handleTextBudget(ctx) {
+    const userId = ctx.user.id;
+    const budgetState = this.stateBudget[userId];
+    const categories = Object.keys(budgetState);
+    const res = categories
+        .filter(category => columnMappingBudget[category])
+        .map(category => columnMappingBudget[category]);
+  console.log(res)
+    console.log('code có chạy vào đây')
+  }
   async handleTextReport(ctx) {
-    const userId = ctx.from.id;
-    const userState = this.waitingForInput[userId];
+    const  userId = String(ctx.from.id);
+    const userState = await  this.waitingForInput.get(userId);
 
 
     if (!userState || userState.action !== "enter_report_month") {
@@ -20,13 +39,12 @@ class TextHandler {
     }
 
     await this.reportManager.MonthReport(ctx, month);
-    delete this.waitingForInput[userId];
+    await  this.waitingForInput.delete(userId)
   }
 
   async handleTextDReport(ctx) {
-    const userId = ctx.from.id;
-    const userState = this.waitingForInput[userId];
-
+    const  userId = String(ctx.from.id);
+    const userState = await  this.waitingForInput.get(userId);
 
     if (!userState || userState.action !== "del_report") {
       return ctx.reply("Vui lòng chọn một hành động từ menu trước khi nhập thông tin.");
@@ -38,12 +56,12 @@ class TextHandler {
     }
 
     await this.reportManager.DelReport(ctx, id);
-    delete this.waitingForInput[userId];
+    await  this.waitingForInput.delete(userId)
   }
 
   async handleTextExpense(ctx) {
-    const userId = ctx.from.id;
-    const userState = this.waitingForInput[userId];
+    const  userId = String(ctx.from.id);
+    const userState = await  this.waitingForInput.get(userId);
 
     if (!userState || userState.action !== "enter_description") {
       return ctx.reply("Vui lòng chọn một hành động từ menu trước khi nhập thông tin.");
@@ -60,7 +78,7 @@ class TextHandler {
     }
 
     await this.expenseManager.handleCategorySelection(ctx, description, parseInt(money), userState.category);
-    delete this.waitingForInput[userId];
+  await  this.waitingForInput.delete(userId)
   }
 }
 

@@ -22,7 +22,21 @@ class ExpenseManager {
                     [{text: "Giải trí", callback_data: "category_giai_tri"}],
                     [{text: "Đi lại", callback_data: "category_di_lai"}],
                     [{text: "Khác", callback_data: "category_khac"}],
-                    [{text: "Import dữ liệu từ exel", callback_data: "import_exel"}]
+                    [{text: "Import dữ liệu từ exel", callback_data: "import_exel"}],
+                    [{text: "đặt ngân sách cho từng loại chi tiêu", callback_data: "set_budget"}],
+                ]
+            }
+        });
+    }
+    async processSetBudgetTransaction(ctx) {
+        await ctx.reply("Chọn loại chi tiêu muốn giới hạn", {
+            reply_markup: {
+                inline_keyboard: [
+                    [{text: "Ăn uống", callback_data: "budget_an_uong"}],
+                    [{text: "Giải trí", callback_data: "budget_giai_tri"}],
+                    [{text: "Đi lại", callback_data: "budget_di_lai"}],
+                    [{text: "Khác", callback_data: "budget_khac"}],
+                    [{text: "Tổng chi tiêu", callback_data: "budget_total"}],
                 ]
             }
         });

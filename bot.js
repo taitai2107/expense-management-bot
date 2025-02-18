@@ -1,19 +1,14 @@
 const { Telegraf } = require("telegraf");
-//const ShutdownCommand = require("./project/commands/AllCommand");
+
 const AllCommand = require("./project/commands/AllCommand");
 const checkSpam = require("./project/midleware/CheckSpam")
-
-
-//const CommandExecutor = require("./project/services/CommandExcutor");
+const redisClient = require('./project/config/core/redisClient')
 
 
 class Bot {
   constructor(apiKey) {
     this.bot = new Telegraf(apiKey);
-    this.waitingForInput = {
-      // action: "action_name",
-      // category: "category_name", 
-    };
+    this.waitingForInput = new redisClient()
    // this.methods = new CommandExecutor();
   }
   registerMiddlewares() {
@@ -22,8 +17,8 @@ class Bot {
   commandMenu(){
     
     this.bot.command("account", (ctx) => {
-      //  console.log("Người dùng đã gõ /đăng ký:", ctx.from);
-      delete this.waitingForInput[ctx.from.id];
+
+      this.waitingForInput.delete(ctx.from.id)
         ctx.reply("Menu:", {
           reply_markup: {
             inline_keyboard: [
@@ -34,8 +29,8 @@ class Bot {
         });
       });
       this.bot.command("start", (ctx) => {
-        //console.log("Người dùng đã gõ /start:", ctx.from);
-        delete this.waitingForInput[ctx.from.id];
+
+        this.waitingForInput.delete(ctx.from.id)
         ctx.reply("Menu:", {
           reply_markup: {
             inline_keyboard: [
@@ -50,16 +45,10 @@ class Bot {
   }
   registerCommands() {
 
-      const allCommand = new AllCommand(this.bot, this.waitingForInput = {
-       
-      });
+      const allCommand = new AllCommand(this.bot, this.waitingForInput );
       this.commandMenu()
       allCommand.register();
-    
-    // commands.forEach((command) => command.register());
 
-
-   
   }
   registerErrorHandler() {
     this.bot.catch((err, ctx) => {

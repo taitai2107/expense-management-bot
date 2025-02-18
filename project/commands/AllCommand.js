@@ -4,6 +4,7 @@ const ExpenseManager = require("../services/Expenses_ManagerCommand");
 const TextHandler = require("../services/Text_handleCommand");
 const ReportManager = require("../services/Report_ManagerCommand");
 const Document_Handle = require("../services/Document_Handle");
+const {CALLBACK_KEYS, categories, typeBudget} = require("../utils/Const");
 
 class AllCommand extends BaseCommand {
     constructor(bot, waitingForInput) {
@@ -12,43 +13,41 @@ class AllCommand extends BaseCommand {
         this.expenseManager = new ExpenseManager();
         this.reportManager = new ReportManager();
         this.waitingForInput = waitingForInput;
+        this.stateBudget = {}
         this.handleText = new TextHandler(
             this.expenseManager,
             this.waitingForInput,
-            this.reportManager
+            this.reportManager,
+            this.stateBudget
         );
-        this.documentHandle = new Document_Handle( this.expenseManager);
+
+        this.documentHandle = new Document_Handle(this.expenseManager);
         this.actions = {};
-        const categories = [
-            'category_di_lai',
-            'category_an_uong',
-            'category_giai_tri',
-            'category_khac',
-            "category_luong"
-        ];
+
 
         this.actions = {
             // Account actions
-            register: this.handleRegister.bind(this),
-            delete_account: this.createMiddleware(this.handleDeleteAccount.bind(this)),
-            yes_delete: this.createMiddleware(this.handleYesDelete.bind(this), {check_user_id: false}),
-            no_delete: this.createMiddleware(this.handleNoDelete.bind(this)),
+            [CALLBACK_KEYS.ACCOUNT_REGISTER]: this.handleRegister.bind(this),
+            [CALLBACK_KEYS.ACCOUNT_DELETE]: this.createMiddleware(this.handleDeleteAccount.bind(this)),
+            [CALLBACK_KEYS.YES_DELETE]: this.createMiddleware(this.handleYesDelete.bind(this), {check_user_id: false}),
+            [CALLBACK_KEYS.NO_DELETE]: this.createMiddleware(this.handleNoDelete.bind(this)),
 
             // Expense actions
-            thu_chi: this.createMiddleware(this.handleTransactionMenu.bind(this), {clearState: true}),
-            import_exel: this.createMiddleware(this.handleImportExelReport.bind(this)),
+            [CALLBACK_KEYS.TRANSACTION_MENU]: this.createMiddleware(this.handleTransactionMenu.bind(this), {clearState: true}),
+            [CALLBACK_KEYS.IMPORT_EXCEL]: this.createMiddleware(this.handleImportExelReport.bind(this)),
+            [CALLBACK_KEYS.SET_BUDGET]: this.createMiddleware(this.handleBudgetMenu.bind(this), {clearState: true}),
 
             // Report actions
-            report: this.createMiddleware(this.handleReportMenu.bind(this)),
-            get_all_report: this.createMiddleware(this.handleGetAllRP.bind(this), {clearState: true}),
-            month_report: this.createMiddleware(this.handleMonthSelection.bind(this)),
-            del_report_id: this.createMiddleware(this.handleDelRPSelection.bind(this)),
-            export_exel_report: this.createMiddleware(this.handleExportReport.bind(this)),
-            report_by_category: this.createMiddleware(this.handleRpByCategoryMenu.bind(this), {clearState: true}),
+            [CALLBACK_KEYS.REPORT_MENU]: this.createMiddleware(this.handleReportMenu.bind(this)),
+            [CALLBACK_KEYS.GET_ALL_REPORT]: this.createMiddleware(this.handleGetAllRP.bind(this), {clearState: true}),
+            [CALLBACK_KEYS.MONTH_REPORT]: this.createMiddleware(this.handleMonthSelection.bind(this)),
+            [CALLBACK_KEYS.DEL_RP_BY_ID]: this.createMiddleware(this.handleDelRPSelection.bind(this)),
+            [CALLBACK_KEYS.EXPORT_EXCEL]: this.createMiddleware(this.handleExportReport.bind(this)),
+            [CALLBACK_KEYS.REPORT_BY_CATEGORY]: this.createMiddleware(this.handleRpByCategoryMenu.bind(this), {clearState: true}),
             //category_di_lai_rp: this.createMiddleware(this.handleCategoryReportSelection.bind(this)),
 
-            help: this.createMiddleware(this.handleHelp.bind(this)),
-            default: this.handleInvalidChoice.bind(this),
+            [CALLBACK_KEYS.HELP]: this.createMiddleware(this.handleHelp.bind(this)),
+            [CALLBACK_KEYS.DEFAULT]: this.handleInvalidChoice.bind(this),
         };
         //category_luong: this.createMiddleware(this.handleCategorySelection.bind(this)),
         categories.forEach(category => {
@@ -57,24 +56,26 @@ class AllCommand extends BaseCommand {
         categories.forEach(category => {
             this.actions[category + '_rp'] = this.createMiddleware(this.handleCategoryReportSelection.bind(this));
         });
+        typeBudget.forEach(type => {
+            this.actions[type] = this.createMiddleware(this.handleSetBudgetSelection.bind(this));
+        })
     }
 
 
     createMiddleware(action, options = {clearState: false, check_user_id: true}) {
         return async (ctx) => {
             const userId = ctx.from.id;
-
             try {
                 if (options.check_user_id) {
                     const accountExists = await this.account.checkIfAccountExists(userId);
-
                     if (!accountExists) {
                         return ctx.reply("Tài khoản không tồn tại. Vui lòng đăng ký trước.");
                     }
                 }
                 await action(ctx);
                 if (options.clearState) {
-                    delete this.waitingForInput[userId];
+                    await  this.waitingForInput.delete(ctx.from.id)
+
                 }
             } catch (error) {
                 console.error(`Error in middleware for user ${userId}:`, error);
@@ -109,9 +110,9 @@ class AllCommand extends BaseCommand {
         ctx.reply(message)
     }
 
-    handleImportExelReport(ctx) {
-        const userId = ctx.from.id;
-        this.waitingForInput[userId] = 'waiting_for_excel';
+    async handleImportExelReport(ctx) {
+        const userId = String(ctx.from.id);
+        await this.waitingForInput.set(userId,'waiting_for_excel',999)
         ctx.reply('Hãy gửi file Excel (.xlsx) để import dữ liệu.');
     }
 
@@ -136,13 +137,20 @@ class AllCommand extends BaseCommand {
     }
 
     async handleCategorySelection(ctx) {
-        const userId = ctx.from.id;
-        this.waitingForInput[userId] = {action: "enter_description", category: ctx.callbackQuery.data};
+        const userId = String(ctx.from.id);
+       await this.waitingForInput.set(userId,{action: "enter_description", category: ctx.callbackQuery.data},999)
         await ctx.reply("Hãy nhập mô tả thu chi:");
     }
 
+    async handleSetBudgetSelection(ctx) {
+        const userId = ctx.from.id;
+        const category = ctx.callbackQuery.data;
+      //  this.stateBudget[userId][category] = {action: "set_budget", category: category, budget: null};
+     this.stateBudget[userId] = {action: "set_budget", category: category, budget: null}
+        // await ctx.reply("chọn loại ngân sách mà bạn muốn set")
+    }
+
     async handleCategoryReportSelection(ctx) {
-        //const userId = ctx.from.id;
         this.reportManager.ReportByCateGory(ctx, ctx.callbackQuery.data)
 
     }
@@ -152,18 +160,15 @@ class AllCommand extends BaseCommand {
     }
 
     async handleMonthSelection(ctx) {
-        const userId = ctx.from.id;
-        //   console.log('userid',userId)
-        // console.log('log',Object.keys(this.waitingForInput[userId]),this.waitingForInput[userId] = { action: "enter_report_month" })
-        this.waitingForInput[userId] = {action: "enter_report_month"};
+        const userId = String(ctx.from.id);
+        await this.waitingForInput.set(userId,{action: "enter_report_month"},999)
         await ctx.reply("Hãy nhập tháng cần xem chi tiêu (1-12):");
     }
 
     async handleDelRPSelection(ctx) {
-        const userId = ctx.from.id;
-        //   console.log('userid',userId)
-        // console.log('log',Object.keys(this.waitingForInput[userId]),this.waitingForInput[userId] = { action: "enter_report_month" })
-        this.waitingForInput[userId] = {action: "del_report"};
+        const userId = String(ctx.from.id);
+
+       await this.waitingForInput.set(userId, {action: "del_report"},999)
         await ctx.reply("Hãy nhập id giao dịch cần xóa:");
     }
 
@@ -184,6 +189,10 @@ class AllCommand extends BaseCommand {
         await this.expenseManager.processTransaction(ctx);
     }
 
+    async handleBudgetMenu(ctx) {
+        await this.expenseManager.processSetBudgetTransaction(ctx);
+    }
+
     async handleRpByCategoryMenu(ctx) {
         await this.reportManager.processReportByCategory(ctx);
     }
@@ -194,9 +203,9 @@ class AllCommand extends BaseCommand {
         });
 
         this.bot.on("text", async (ctx) => {
-            const userId = ctx.from.id;
-            const userState = this.waitingForInput[userId];
-
+            const userId = String(ctx.from.id);
+           const userState = await this.waitingForInput.get(userId)
+            const budgetState = this.stateBudget[userId];
             if (userState) {
                 if (userState.action === "enter_report_month") {
                     await this.handleText.handleTextReport(ctx);
@@ -205,21 +214,27 @@ class AllCommand extends BaseCommand {
                 } else if (userState.action === "del_report") {
                     await this.handleText.handleTextDReport(ctx);
                 }
+                // else if (this.stateBudget[userId].action === "set_budget"||budgetState) {
+                //     console.log("code chạy vào đây");
+                //     await this.handleText.handleTextBudget(ctx);
+                //
+                // }
             } else {
                 await ctx.reply("Lỗi cú pháp.Chọn một hành động từ menu trước khi nhập thông tin.");
             }
         });
         this.bot.on("document", async (ctx) => {
-
-            if (this.waitingForInput[ctx.from.id] == 'waiting_for_excel') {
-                this.documentHandle.handleDocumentExelImport(ctx)
-                delete this.waitingForInput[ctx.from.id]
+            const userId = String(ctx.from.id);
+            const state = await this.waitingForInput.get(userId);
+            if (state === 'waiting_for_excel') {
+                await this.documentHandle.handleDocumentExelImport(ctx);
+                await this.waitingForInput.delete(userId);
             } else {
                 return ctx.reply('Bạn cần chọn một hành động từ menu trước khi gửi file.');
             }
-
-        })
+        });
     }
 }
 
+// có hạn chế khi tắt sv bị xóa hết state(refactor lại lưu state trên services redis)
 module.exports = AllCommand;
