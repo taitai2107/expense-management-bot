@@ -1,36 +1,70 @@
+const { getUserId } = require('../utils/Utils');
 class TextHandler {
   constructor(expenseManager,waitingForInput , reportManager,stateBudget) {
     this.expenseManager = expenseManager;
     this.waitingForInput = waitingForInput
     this.reportManager = reportManager;
-    this.stateBudget = stateBudget;
+
 
   }
- columnMappingBudget = {
-   budget_an_uong:"Ăn uống",
-   budget_giai_tri:"Giải trí",
-   budget_di_lai:"Đi Lại",
-   budget_khac:"Khác",
-   budget_total:"Tổng"
-  }
+ // columnMappingBudget = {
+ //   budget_an_uong:"Ăn uống",
+ //   budget_giai_tri:"Giải trí",
+ //   budget_di_lai:"Đi Lại",
+ //   budget_khac:"Khác",
+ //   budget_total:"Tổng"
+ //  }
 
   async handleTextBudget(ctx) {
-    let  userId = String(ctx.from.id);
-    console.log('tài ở đây')
+    const userId = String(ctx.from.id);
 
-  //   const userId = ctx.user.id;
-  //   const budgetState = this.stateBudget[userId];
-  //   const categories = Object.keys(budgetState);
-  //   const res = categories
-  //       .filter(category => columnMappingBudget[category])
-  //       .map(category => columnMappingBudget[category]);
-  // console.log(res)
-    console.log('code có chạy vào đây')
+    const { success, userId: uid } = await getUserId(userId);
+    if (!success) {
+      return ctx.reply("Tài khoản không tồn tại.");
+    }
+
+    const userState = await this.waitingForInput.get(userId);
+    if (!userState || userState.action !== "set_budget") {
+      return ctx.reply("Vui lòng chọn một hành động từ menu trước khi nhập thông tin.");
+    }
+
+    const value = Number(ctx.message.text.trim());
+    if (isNaN(value) || value <= 0) {
+      return ctx.reply("Input không hợp lệ, vui lòng nhập số lớn hơn 0");
+    }
+
+    let now = new Date();
+    let month = now.getMonth() + 1;
+    let nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0);
+    let ttl = Math.floor((nextMonth - now) / 1000);
+
+    let rawData = await this.waitingForInput.get(`bg_${userId}`);
+    let budgetObj;
+    if (rawData) {
+      try {
+        budgetObj = JSON.parse(rawData);
+      } catch (err) {
+        console.error("Lỗi parse JSON:", err);
+        budgetObj = null;
+      }
+    }
+
+    if (!budgetObj || budgetObj.month !== month) {
+      budgetObj = { uid: uid, month: month, budgets: {} };
+    }
+
+    const category = userState.category;
+
+    budgetObj.budgets[category] = (budgetObj.budgets[category] || 0) + value;
+
+
+    await this.waitingForInput.set(`bg_${userId}`, JSON.stringify(budgetObj), ttl);
+    await this.waitingForInput.delete(userId);
+    ctx.reply(`✅ Set thành công ngân sách cho ${category}: ${value}`);
   }
   async handleTextReport(ctx) {
     const  userId = String(ctx.from.id);
     const userState = await  this.waitingForInput.get(userId);
-
 
     if (!userState || userState.action !== "enter_report_month") {
       return ctx.reply("Vui lòng chọn một hành động từ menu trước khi nhập thông tin.");
@@ -43,6 +77,7 @@ class TextHandler {
 
     await this.reportManager.MonthReport(ctx, month);
     await  this.waitingForInput.delete(userId)
+
   }
 
   async handleTextDReport(ctx) {

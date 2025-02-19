@@ -29,22 +29,20 @@ class ExpenseManager {
         });
     }
     async processSetBudgetTransaction(ctx) {
-        await ctx.reply("Chọn loại chi tiêu muốn giới hạn", {
+        await ctx.reply("Chọn loại chi tiêu muốn giới hạn theo tháng", {
             reply_markup: {
                 inline_keyboard: [
                     [{text: "Ăn uống", callback_data: "budget_an_uong"}],
                     [{text: "Giải trí", callback_data: "budget_giai_tri"}],
                     [{text: "Đi lại", callback_data: "budget_di_lai"}],
                     [{text: "Khác", callback_data: "budget_khac"}],
-                    [{text: "Tổng chi tiêu", callback_data: "budget_total"}],
+                    //[{text: "Tổng chi tiêu", callback_data: "budget_total"}],
                 ]
             }
         });
     }
 
     async handleImportExel(ctx,money_chi,money_thu,category,description ){
-        if (!ctx.from.id) {
-            return await ctx.reply("Không tìm thấy Telegram ID. Vui lòng thử lại.");}
             try {
                 let userid = (await getUserId(ctx.from.id)).userId
                 const query = `  INSERT INTO expenses (user_id, money_chi, money_thu, expense_type, category,

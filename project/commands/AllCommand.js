@@ -104,6 +104,7 @@ class AllCommand extends BaseCommand {
             "Hiện tại, bot hỗ trợ các chức năng quản lý chi tiêu cơ bản và đang trong quá trình phát triển thêm nhiều tính năng hữu ích.\n\n" +
             "📩 *Liên hệ góp ý:*\n" +
             "Mọi ý kiến đóng góp xin vui lòng gửi về email: *tainguyencongkhanh@gmail.com*.\n\n" +
+            "Nếu muốn tự host tôi đã build dockerfile mọi người build image và tự chạy trên vps" +
             " Xin chân thành cảm ơn!";
         ctx.reply(message)
     }
@@ -128,6 +129,8 @@ class AllCommand extends BaseCommand {
     async handleYesDelete(ctx) {
         const user_id = ctx.from.id;
         await this.account.deleteAccount(user_id, ctx);
+        await this.waitingForInput.delete(String(user_id))
+        //["", "budget_"].forEach(pref => this.waitingForInput.delete(`${pref}${user_id}`));
     }
 
     async handleNoDelete(ctx) {
@@ -159,7 +162,7 @@ class AllCommand extends BaseCommand {
 
     async handleMonthSelection(ctx) {
         const userId = String(ctx.from.id);
-        await this.waitingForInput.set(userId, {action: "enter_report_month"}, 60 * 24 * 365)
+        await this.waitingForInput.set(userId, {action: "enter_report_month"})
         await ctx.reply("Hãy nhập tháng cần xem chi tiêu (1-12):");
     }
 
@@ -205,7 +208,7 @@ class AllCommand extends BaseCommand {
             const userState = await this.waitingForInput.get(userId)
             if (userState) {
                 if (userState.action === "set_budget") {
-                    console.log('têttetet')
+
                     await this.handleText.handleTextBudget(ctx);
                 }
                  if (userState.action === "enter_report_month") {
