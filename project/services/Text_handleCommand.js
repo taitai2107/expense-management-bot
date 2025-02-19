@@ -15,9 +15,9 @@ class TextHandler {
   }
 
   async handleTextBudget(ctx) {
-    let  userId = String(ctx.user.id);
+    let  userId = String(ctx.from.id);
     console.log('tài ở đây')
-    await  this.waitingForInput.delete(userId)
+
   //   const userId = ctx.user.id;
   //   const budgetState = this.stateBudget[userId];
   //   const categories = Object.keys(budgetState);

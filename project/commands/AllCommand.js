@@ -7,18 +7,16 @@ const Document_Handle = require("../services/Document_Handle");
 const {CALLBACK_KEYS, categories, typeBudget} = require("../utils/Const");
 
 class AllCommand extends BaseCommand {
-    constructor(bot, waitingForInput, stateBudget) {
+    constructor(bot, waitingForInput) {
         super(bot, waitingForInput);
         this.account = new AccountManager();
         this.expenseManager = new ExpenseManager();
         this.reportManager = new ReportManager();
         this.waitingForInput = waitingForInput;
-        this.stateBudget = stateBudget;
         this.handleText = new TextHandler(
             this.expenseManager,
             this.waitingForInput,
             this.reportManager,
-            this.stateBudget
         );
 
         this.documentHandle = new Document_Handle(this.expenseManager);
@@ -145,7 +143,8 @@ class AllCommand extends BaseCommand {
     async handleSetBudgetSelection(ctx) {
         const userId = String(ctx.from.id);
         const category = ctx.callbackQuery.data;
-        await this.stateBudget.set(`bg_${userId}`, {action: "set_budget", category: category, budget: null})
+        await this.waitingForInput.set(userId, {action: "set_budget", category: category, budget: null},999)
+        ctx.reply(`nhập số tiền muốn giới hạn chi tiêu ${category}: `)
 
     }
 
@@ -204,10 +203,9 @@ class AllCommand extends BaseCommand {
         this.bot.on("text", async (ctx) => {
             const userId = String(ctx.from.id);
             const userState = await this.waitingForInput.get(userId)
-            const budgetState = await this.stateBudget.get(`bg_${userId}`)
             if (userState) {
-                if (budgetState.action === "set_budget") {
-
+                if (userState.action === "set_budget") {
+                    console.log('têttetet')
                     await this.handleText.handleTextBudget(ctx);
                 }
                  if (userState.action === "enter_report_month") {

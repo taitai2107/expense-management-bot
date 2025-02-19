@@ -9,7 +9,7 @@ class Bot {
   constructor(apiKey) {
     this.bot = new Telegraf(apiKey);
     this.waitingForInput = new redisClient()
-    this.stateBudget = new redisClient()
+
    // this.methods = new CommandExecutor();
   }
   registerMiddlewares() {
@@ -19,7 +19,6 @@ class Bot {
 
       this.bot.command("account", async (ctx) => {
         let userId = String(ctx.from.id)
-        await  this.stateBudget.delete(`bg_${userId}`)
        await this.waitingForInput.delete(userId)
         ctx.reply("Menu:", {
           reply_markup: {
@@ -32,7 +31,6 @@ class Bot {
       });
       this.bot.command("start", async (ctx) => {
         let userId = String(ctx.from.id)
-        await  this.stateBudget.delete(`bg_${userId}`)
         await this.waitingForInput.delete(userId)
         ctx.reply("Menu:", {
           reply_markup: {
@@ -48,7 +46,7 @@ class Bot {
   }
   registerCommands() {
 
-      const allCommand = new AllCommand(this.bot, this.waitingForInput,this.stateBudget );
+      const allCommand = new AllCommand(this.bot, this.waitingForInput );
       this.commandMenu()
       allCommand.register();
 

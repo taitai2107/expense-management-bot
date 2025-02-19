@@ -1,8 +1,9 @@
+const e = require("dotenv")
+e.config() //load tất cả các file khi import nên để ở dưới sẽ không dùng được env cho các file kia
 const Bot = require("./bot");
 const RedisConfig = require("./project/config/redisConfig")
 const {testConnect} = require("./project/config/connect");
-const e = require("dotenv")
-e.config()
+
 const API_KEY = process.env.API_KEY;
 RedisConfig.init()
 if (!API_KEY) {
