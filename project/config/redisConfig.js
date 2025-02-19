@@ -3,10 +3,10 @@
 class RedisConfig {
     static client = null;
     static data = {
-        password: process.env["REDIS_PASS "],
+        password: process.env["REDIS_PASS"],
         socket: {
-            host: process.env["REDIS_HOST "],
-            port:  process.env["REDIS_PORT "],
+            host: process.env["REDIS_HOST"],
+            port: process.env["REDIS_PORT"],
         },
     };
     static async init() {

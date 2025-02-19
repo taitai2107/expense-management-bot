@@ -13,12 +13,10 @@ class AllCommand extends BaseCommand {
         this.expenseManager = new ExpenseManager();
         this.reportManager = new ReportManager();
         this.waitingForInput = waitingForInput;
-        this.stateBudget = {}
         this.handleText = new TextHandler(
             this.expenseManager,
             this.waitingForInput,
             this.reportManager,
-            this.stateBudget
         );
 
         this.documentHandle = new Document_Handle(this.expenseManager);
@@ -64,7 +62,7 @@ class AllCommand extends BaseCommand {
 
     createMiddleware(action, options = {clearState: false, check_user_id: true}) {
         return async (ctx) => {
-            const userId = ctx.from.id;
+            const userId = String(ctx.from.id);
             try {
                 if (options.check_user_id) {
                     const accountExists = await this.account.checkIfAccountExists(userId);
@@ -74,7 +72,7 @@ class AllCommand extends BaseCommand {
                 }
                 await action(ctx);
                 if (options.clearState) {
-                    await  this.waitingForInput.delete(ctx.from.id)
+                    await this.waitingForInput.delete(userId)
 
                 }
             } catch (error) {
@@ -112,7 +110,7 @@ class AllCommand extends BaseCommand {
 
     async handleImportExelReport(ctx) {
         const userId = String(ctx.from.id);
-        await this.waitingForInput.set(userId,'waiting_for_excel',999)
+        await this.waitingForInput.set(userId, 'waiting_for_excel', 999)
         ctx.reply('Hãy gửi file Excel (.xlsx) để import dữ liệu.');
     }
 
@@ -138,16 +136,16 @@ class AllCommand extends BaseCommand {
 
     async handleCategorySelection(ctx) {
         const userId = String(ctx.from.id);
-       await this.waitingForInput.set(userId,{action: "enter_description", category: ctx.callbackQuery.data},999)
+        await this.waitingForInput.set(userId, {action: "enter_description", category: ctx.callbackQuery.data}, 999)
         await ctx.reply("Hãy nhập mô tả thu chi:");
     }
 
     async handleSetBudgetSelection(ctx) {
-        const userId = ctx.from.id;
+        const userId = String(ctx.from.id);
         const category = ctx.callbackQuery.data;
-      //  this.stateBudget[userId][category] = {action: "set_budget", category: category, budget: null};
-     this.stateBudget[userId] = {action: "set_budget", category: category, budget: null}
-        // await ctx.reply("chọn loại ngân sách mà bạn muốn set")
+        await this.waitingForInput.set(userId, {action: "set_budget", category: category, budget: null},999)
+        ctx.reply(`nhập số tiền muốn giới hạn chi tiêu ${category}: `)
+
     }
 
     async handleCategoryReportSelection(ctx) {
@@ -161,14 +159,14 @@ class AllCommand extends BaseCommand {
 
     async handleMonthSelection(ctx) {
         const userId = String(ctx.from.id);
-        await this.waitingForInput.set(userId,{action: "enter_report_month"},999)
+        await this.waitingForInput.set(userId, {action: "enter_report_month"}, 60 * 24 * 365)
         await ctx.reply("Hãy nhập tháng cần xem chi tiêu (1-12):");
     }
 
     async handleDelRPSelection(ctx) {
         const userId = String(ctx.from.id);
 
-       await this.waitingForInput.set(userId, {action: "del_report"},999)
+        await this.waitingForInput.set(userId, {action: "del_report"}, 999)
         await ctx.reply("Hãy nhập id giao dịch cần xóa:");
     }
 
@@ -204,21 +202,20 @@ class AllCommand extends BaseCommand {
 
         this.bot.on("text", async (ctx) => {
             const userId = String(ctx.from.id);
-           const userState = await this.waitingForInput.get(userId)
-            const budgetState = this.stateBudget[userId];
+            const userState = await this.waitingForInput.get(userId)
             if (userState) {
-                if (userState.action === "enter_report_month") {
+                if (userState.action === "set_budget") {
+                    console.log('têttetet')
+                    await this.handleText.handleTextBudget(ctx);
+                }
+                 if (userState.action === "enter_report_month") {
                     await this.handleText.handleTextReport(ctx);
                 } else if (userState.action === "enter_description") {
                     await this.handleText.handleTextExpense(ctx);
                 } else if (userState.action === "del_report") {
                     await this.handleText.handleTextDReport(ctx);
                 }
-                // else if (this.stateBudget[userId].action === "set_budget"||budgetState) {
-                //     console.log("code chạy vào đây");
-                //     await this.handleText.handleTextBudget(ctx);
-                //
-                // }
+
             } else {
                 await ctx.reply("Lỗi cú pháp.Chọn một hành động từ menu trước khi nhập thông tin.");
             }
