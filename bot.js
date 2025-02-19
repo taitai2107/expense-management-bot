@@ -1,5 +1,5 @@
 const { Telegraf } = require("telegraf");
-
+const getBudgetText = require('./project/helper/menuHandler')
 const AllCommand = require("./project/commands/AllCommand");
 const checkSpam = require("./project/midleware/CheckSpam")
 const redisClient = require('./project/config/core/redisClient')
@@ -20,7 +20,8 @@ class Bot {
       this.bot.command("account", async (ctx) => {
         let userId = String(ctx.from.id)
        await this.waitingForInput.delete(userId)
-        ctx.reply("Menu:", {
+          let budgetData = await getBudgetText(userId,this.waitingForInput)
+        ctx.reply(budgetData,{
           reply_markup: {
             inline_keyboard: [
               [{ text: "Đăng ký", callback_data: "register" }],
@@ -29,21 +30,26 @@ class Bot {
           },
         });
       });
-      this.bot.command("start", async (ctx) => {
-        let userId = String(ctx.from.id)
-        await this.waitingForInput.delete(userId)
-        ctx.reply("Menu:", {
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "thu/chi", callback_data: "thu_chi" }],
-              [{ text: "báo cáo", callback_data: "report" }],
-              [{ text: "help", callback_data: "help" }],
-            ],
-          },
-        });
-      });
-  
-  }
+       this.bot.command("start", async (ctx) => {
+           let userId = String(ctx.from.id);
+           await this.waitingForInput.delete(userId);
+          let budgetData = await getBudgetText(userId,this.waitingForInput)
+
+           const menuOptions = [
+               [{ text: "thu/chi", callback_data: "thu_chi" }],
+               [{ text: "báo cáo", callback_data: "report" }],
+               [{ text: "help", callback_data: "help" }],
+           ];
+
+           ctx.reply(budgetData, {
+               reply_markup: {
+                   inline_keyboard: menuOptions,
+               },
+           });
+       });
+
+
+   }
   registerCommands() {
 
       const allCommand = new AllCommand(this.bot, this.waitingForInput );
