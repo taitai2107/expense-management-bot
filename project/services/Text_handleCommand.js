@@ -15,13 +15,16 @@ class TextHandler {
   }
 
   async handleTextBudget(ctx) {
-    const userId = ctx.user.id;
-    const budgetState = this.stateBudget[userId];
-    const categories = Object.keys(budgetState);
-    const res = categories
-        .filter(category => columnMappingBudget[category])
-        .map(category => columnMappingBudget[category]);
-  console.log(res)
+    let  userId = String(ctx.user.id);
+    console.log('tài ở đây')
+    await  this.waitingForInput.delete(userId)
+  //   const userId = ctx.user.id;
+  //   const budgetState = this.stateBudget[userId];
+  //   const categories = Object.keys(budgetState);
+  //   const res = categories
+  //       .filter(category => columnMappingBudget[category])
+  //       .map(category => columnMappingBudget[category]);
+  // console.log(res)
     console.log('code có chạy vào đây')
   }
   async handleTextReport(ctx) {
@@ -60,6 +63,7 @@ class TextHandler {
   }
 
   async handleTextExpense(ctx) {
+    console.log('code chạy vào đây')
     const  userId = String(ctx.from.id);
     const userState = await  this.waitingForInput.get(userId);
 

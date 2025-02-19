@@ -9,16 +9,18 @@ class Bot {
   constructor(apiKey) {
     this.bot = new Telegraf(apiKey);
     this.waitingForInput = new redisClient()
+    this.stateBudget = new redisClient()
    // this.methods = new CommandExecutor();
   }
   registerMiddlewares() {
     this.bot.use(checkSpam);
   }
-  commandMenu(){
-    
-    this.bot.command("account", (ctx) => {
+   commandMenu(){
 
-      this.waitingForInput.delete(ctx.from.id)
+      this.bot.command("account", async (ctx) => {
+        let userId = String(ctx.from.id)
+        await  this.stateBudget.delete(`bg_${userId}`)
+       await this.waitingForInput.delete(userId)
         ctx.reply("Menu:", {
           reply_markup: {
             inline_keyboard: [
@@ -28,9 +30,10 @@ class Bot {
           },
         });
       });
-      this.bot.command("start", (ctx) => {
-
-        this.waitingForInput.delete(ctx.from.id)
+      this.bot.command("start", async (ctx) => {
+        let userId = String(ctx.from.id)
+        await  this.stateBudget.delete(`bg_${userId}`)
+        await this.waitingForInput.delete(userId)
         ctx.reply("Menu:", {
           reply_markup: {
             inline_keyboard: [
@@ -45,7 +48,7 @@ class Bot {
   }
   registerCommands() {
 
-      const allCommand = new AllCommand(this.bot, this.waitingForInput );
+      const allCommand = new AllCommand(this.bot, this.waitingForInput,this.stateBudget );
       this.commandMenu()
       allCommand.register();
 
