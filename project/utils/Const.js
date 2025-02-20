@@ -6,6 +6,7 @@
     TRANSACTION_MENU: "thu_chi",
     IMPORT_EXCEL: "import_exel",
     SET_BUDGET: "set_budget",
+    DEL_BUDGET: "del_budget",
     REPORT_MENU: "report",
     GET_ALL_REPORT: "get_all_report",
     MONTH_REPORT: "month_report",
@@ -20,7 +21,6 @@ const typeBudget = [
     'budget_giai_tri',
     'budget_di_lai',
     'budget_khac',
-    'budget_total'
 ]
 const categories = [
     'category_di_lai',

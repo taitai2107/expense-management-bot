@@ -24,6 +24,7 @@ class ExpenseManager {
                     [{text: "Khác", callback_data: "category_khac"}],
                     [{text: "Import dữ liệu từ exel", callback_data: "import_exel"}],
                     [{text: "đặt ngân sách cho từng loại chi tiêu", callback_data: "set_budget"}],
+                    [{text: "Xóa note chi tiêu trong tháng", callback_data: "del_budget"}],
                 ]
             }
         });
@@ -35,7 +36,7 @@ class ExpenseManager {
                     [{text: "Ăn uống", callback_data: "budget_an_uong"}],
                     [{text: "Giải trí", callback_data: "budget_giai_tri"}],
                     [{text: "Đi lại", callback_data: "budget_di_lai"}],
-                    [{text: "Khác", callback_data: "budget_khac"}],
+                    [{text: "Khác", callback_data: "budget_khac"}]
                     //[{text: "Tổng chi tiêu", callback_data: "budget_total"}],
                 ]
             }

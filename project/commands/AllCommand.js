@@ -34,6 +34,8 @@ class AllCommand extends BaseCommand {
             [CALLBACK_KEYS.TRANSACTION_MENU]: this.createMiddleware(this.handleTransactionMenu.bind(this), {clearState: true}),
             [CALLBACK_KEYS.IMPORT_EXCEL]: this.createMiddleware(this.handleImportExelReport.bind(this)),
             [CALLBACK_KEYS.SET_BUDGET]: this.createMiddleware(this.handleBudgetMenu.bind(this), {clearState: true}),
+            [CALLBACK_KEYS.DEL_BUDGET]:this.createMiddleware(this.handleDelBudget.bind(this)),
+
 
             // Report actions
             [CALLBACK_KEYS.REPORT_MENU]: this.createMiddleware(this.handleReportMenu.bind(this)),
@@ -192,6 +194,11 @@ class AllCommand extends BaseCommand {
 
     async handleBudgetMenu(ctx) {
         await this.expenseManager.processSetBudgetTransaction(ctx);
+    }
+    async handleDelBudget(ctx){
+        let userId = String(ctx.from.id)
+        await this.waitingForInput.delete(`bg_${userId}`)
+        ctx.reply("đã xóa thành công")
     }
 
     async handleRpByCategoryMenu(ctx) {
