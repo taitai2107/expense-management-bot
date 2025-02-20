@@ -2,4 +2,5 @@
 npm-debug.log
 .git
 .gitignore
+.env
 
